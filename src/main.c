@@ -18,13 +18,13 @@
 #include <math.h>
 
 
-#define SAMPLE_RATE     (36000)
+#define SAMPLE_RATE     (44100)
 #define I2S_NUM         (0)
-#define WAVE_FREQ_HZ    (100)
+#define WAVE_FREQ_HZ    (1000)
 #define PI              (3.14159265)
-#define I2S_BCK_IO      (GPIO_NUM_26)
-#define I2S_WS_IO       (GPIO_NUM_22)
-#define I2S_DO_IO       (GPIO_NUM_25)
+#define I2S_BCK_IO      (GPIO_NUM_26) //bit clock line BCLK - continuos serial clock SCK
+#define I2S_WS_IO       (GPIO_NUM_25) //word select WS -  left right clock  LRCLK
+#define I2S_DO_IO       (GPIO_NUM_22) //serial data SD - multiplexed data line
 #define I2S_DI_IO       (-1)
 
 #define SAMPLE_PER_CYCLE (SAMPLE_RATE/WAVE_FREQ_HZ)
@@ -32,11 +32,11 @@
 i2s_config_t i2s_config = {
     .mode = I2S_MODE_MASTER | I2S_MODE_TX,                                  // Only TX
     .sample_rate = SAMPLE_RATE,
-    .bits_per_sample = 16,
+    .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
     .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,                           //2-channels
-    .communication_format = I2S_COMM_FORMAT_STAND_MSB,
-    .dma_buf_count = 6,
-    .dma_buf_len = 60,
+    .communication_format = I2S_COMM_FORMAT_STAND_I2S,
+    .dma_buf_count = 8,
+    .dma_buf_len = 8,//TOCHECK is too long it's noisy; the signal doesnt full cover the input signal space 
     .use_apll = false,
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1                                //Interrupt level 1
 };
@@ -50,6 +50,11 @@ i2s_pin_config_t pin_config = {
 
 static void setup_triangle_sine_waves(int bits)
 {
+    /*
+    function that create a sin wave for right audio and a triangular for the right one.
+    how (i dont know )
+
+    */
     int *samples_data = malloc(((bits+8)/16)*SAMPLE_PER_CYCLE*4);
     unsigned int i, sample_val;
     double sin_float, triangle_float, triangle_step = (double) pow(2, bits) / SAMPLE_PER_CYCLE;
@@ -93,6 +98,9 @@ static void setup_triangle_sine_waves(int bits)
     //         i2s_push_sample(0, &samples_data[i*2], 100);
     // }
     // or write
+
+    //it write for the left a sin and for the right a triangular.
+    //the noise is caused by the fact that the buffer is to long and the signal is too short
     i2s_write(I2S_NUM, samples_data, ((bits+8)/16)*SAMPLE_PER_CYCLE*4, &i2s_bytes_write, 100);
 
     free(samples_data);
