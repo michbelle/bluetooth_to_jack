@@ -18,9 +18,9 @@
 #include <math.h>
 
 
-#define SAMPLE_RATE     (44100)
+#define SAMPLE_RATE     (36000)
 #define I2S_NUM         (0)
-#define WAVE_FREQ_HZ    (1000)
+#define WAVE_FREQ_HZ    (100)
 #define PI              (3.14159265)
 #define I2S_BCK_IO      (GPIO_NUM_26) //bit clock line BCLK - continuos serial clock SCK
 #define I2S_WS_IO       (GPIO_NUM_25) //word select WS -  left right clock  LRCLK
@@ -35,8 +35,11 @@ i2s_config_t i2s_config = {
     .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
     .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,                           //2-channels
     .communication_format = I2S_COMM_FORMAT_STAND_I2S,
-    .dma_buf_count = 8,
-    .dma_buf_len = 8,//TOCHECK is too long it's noisy; the signal doesnt full cover the input signal space 
+    //https://youtu.be/ejyt-kWmys8
+    //direct memory access: peripheral access memory without cpu
+    .dma_buf_count = 6,//how many buff 
+    .dma_buf_len = 60,//how long is this buff 
+    //TOCHECK is too long it's noisy; the signal doesnt full cover the input signal space 
     .use_apll = false,
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1                                //Interrupt level 1
 };
@@ -50,11 +53,13 @@ i2s_pin_config_t pin_config = {
 
 static void setup_triangle_sine_waves(int bits)
 {
+
+
     /*
     function that create a sin wave for right audio and a triangular for the right one.
     how (i dont know )
-
     */
+
     int *samples_data = malloc(((bits+8)/16)*SAMPLE_PER_CYCLE*4);
     unsigned int i, sample_val;
     double sin_float, triangle_float, triangle_step = (double) pow(2, bits) / SAMPLE_PER_CYCLE;
@@ -86,18 +91,21 @@ static void setup_triangle_sine_waves(int bits)
             samples_data[i*2] = ((int) triangle_float);
             samples_data[i*2 + 1] = ((int) sin_float);
         }
+        printf("%f\n", sin_float);
 
     }
 
     i2s_set_clk(I2S_NUM, SAMPLE_RATE, bits, 2);
-    //Using push
-    // for(i = 0; i < SAMPLE_PER_CYCLE; i++) {
-    //     if (bits == 16)
-    //         i2s_push_sample(0, &samples_data[i], 100);
-    //     else
-    //         i2s_push_sample(0, &samples_data[i*2], 100);
-    // }
-    // or write
+
+    /*
+    clock= sample_rate * bits(I2S bit width) * 2(stereo)
+    
+    Misurati
+    at 16 bit buck frequancy is 1.1429 MHz 
+    at 24 bit buck frequancy is 1.6552 MHz
+    at 32 bit buck frequancy is 2.4000 MHz
+    */
+
 
     //it write for the left a sin and for the right a triangular.
     //the noise is caused by the fact that the buffer is to long and the signal is too short
@@ -120,7 +128,7 @@ void app_main(void)
     int test_bits = 16;
     while (1) {
         setup_triangle_sine_waves(test_bits);
-        vTaskDelay(5000/portTICK_RATE_MS);
+        vTaskDelay(5000/portTICK_RATE_MS); //add a delay 
         test_bits += 8;
         if(test_bits > 32)
             test_bits = 16;
