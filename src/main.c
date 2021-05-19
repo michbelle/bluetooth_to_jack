@@ -1,6 +1,7 @@
 /* I2S Example
 
     This example code will output 100Hz sine wave and triangle wave to 2-channel of I2S driver
+    it has a sin on a channel and a triangular on the other one (not working fine so far)
     Every 5 seconds, it will change bits_per_sample [16, 24, 32] for i2s data
 
     This example code is in the Public Domain (or CC0 licensed, at your option.)
@@ -9,6 +10,7 @@
     software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
     CONDITIONS OF ANY KIND, either express or implied.
 */
+
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -53,12 +55,6 @@ i2s_pin_config_t pin_config = {
 
 static void setup_triangle_sine_waves(int bits)
 {
-
-
-    /*
-    function that create a sin wave for right audio and a triangular for the right one.
-    how (i dont know )
-    */
 
     int *samples_data = malloc(((bits+8)/16)*SAMPLE_PER_CYCLE*4);
     unsigned int i, sample_val;
