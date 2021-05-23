@@ -13,3 +13,9 @@ plt.plot(x, y1,'r--')
 plt.subplot(212)
 plt.plot(x, y2,'g--')
 plt.show()
+"""
+
+x = data[:]
+plt.plot(x)
+plt.show()
+"""

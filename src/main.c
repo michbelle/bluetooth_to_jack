@@ -87,7 +87,7 @@ static void setup_triangle_sine_waves(int bits)
             samples_data[i*2] = ((int) triangle_float);
             samples_data[i*2 + 1] = ((int) sin_float);
         }
-        printf("%f\n", sin_float);
+        printf("%d\t%d\t%d\n", i, samples_data[i*2], samples_data[i*2+1]);
 
     }
 
@@ -121,13 +121,13 @@ void app_main(void)
     i2s_driver_install(I2S_NUM, &i2s_config, 0, NULL);
     i2s_set_pin(I2S_NUM, &pin_config);
 
-    int test_bits = 16;
+    int test_bits = 24;//16
     while (1) {
         setup_triangle_sine_waves(test_bits);
         vTaskDelay(5000/portTICK_RATE_MS); //add a delay 
         test_bits += 8;
         if(test_bits > 32)
-            test_bits = 16;
+            test_bits = 24;//16
 
     }
 
